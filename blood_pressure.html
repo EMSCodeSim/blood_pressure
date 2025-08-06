@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Blood Pressure Simulator</title>
   <style>
     body {
@@ -41,40 +41,21 @@
   <br>
   <button onclick="startSimulation()">Start Simulation</button>
 
-  <!-- SVG Dial -->
   <svg id="bpDial" width="300" height="300" viewBox="0 0 300 300">
     <circle cx="150" cy="150" r="140" fill="#fdfdfd" stroke="#333" stroke-width="4"/>
-
-    <!-- Major Ticks -->
     <g id="ticks">
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-135,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-108,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-81,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-54,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-27,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(0,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(27,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(54,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(81,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(108,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(135,150,150)"/>
+      <!-- Major Ticks -->
+      ${[...Array(11)].map((_, i) => {
+        const angle = -135 + i * 27;
+        return `<line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(${angle},150,150)" />`
+      }).join('')}
     </g>
-
-    <!-- Minor Ticks -->
     <g id="minorTicks">
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-121.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-94.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-67.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-40.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-13.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(13.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(40.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(67.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(94.5,150,150)"/>
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(121.5,150,150)"/>
+      ${[...Array(10)].map((_, i) => {
+        const angle = -135 + (i * 27 + 13.5);
+        return `<line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(${angle},150,150)" />`
+      }).join('')}
     </g>
-
-    <!-- Labels -->
     <text x="150" y="285" text-anchor="middle" font-size="14">0</text>
     <text x="65" y="255" text-anchor="middle" font-size="14">40</text>
     <text x="30" y="180" text-anchor="middle" font-size="14">80</text>
@@ -84,14 +65,9 @@
     <text x="255" y="100" text-anchor="middle" font-size="14">240</text>
     <text x="270" y="180" text-anchor="middle" font-size="14">280</text>
     <text x="235" y="255" text-anchor="middle" font-size="14">300</text>
-
-    <!-- Needle -->
     <line id="needle" x1="150" y1="150" x2="150" y2="30" stroke="red" stroke-width="4" transform="rotate(-135,150,150)" />
     <circle cx="150" cy="150" r="6" fill="#333" />
   </svg>
-
-  <!-- Updated Heartbeat Sound -->
-  <audio id="heartbeat" src="https://dailyemsquiz.com/sounds/heartbeat.mp3" preload="auto"></audio>
 
   <script>
     function bpToAngle(bp) {
@@ -100,36 +76,45 @@
 
     function updateNeedle(bp) {
       const angle = bpToAngle(bp);
-      document.getElementById('needle').setAttribute('transform', `rotate(${angle},150,150)`);
+      document.getElementById('needle').setAttribute('transform', \`rotate(\${angle},150,150)\`);
+    }
+
+    function playBeatPattern(durationMs = 6000, bpm = 75) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const beatInterval = 60 / bpm;
+      const startTime = ctx.currentTime;
+      const totalBeats = Math.floor(durationMs / (beatInterval * 1000));
+
+      for (let i = 0; i < totalBeats; i++) {
+        const start = startTime + i * beatInterval;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 660;
+        gain.gain.setValueAtTime(1, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.1);
+      }
     }
 
     function startSimulation() {
       const sys = parseInt(document.getElementById('sys').value);
       const dia = parseInt(document.getElementById('dia').value);
       let pressure = 300;
-      const heartbeat = document.getElementById('heartbeat');
-
-      heartbeat.pause();
-      heartbeat.currentTime = 0;
 
       const interval = setInterval(() => {
         updateNeedle(pressure);
 
         if (pressure === sys) {
-          heartbeat.loop = true;
-          heartbeat.play();
+          playBeatPattern(10000, 75); // 10 seconds of beats at 75 BPM
         }
 
-        if (pressure === dia) {
-          heartbeat.pause();
-          heartbeat.currentTime = 0;
+        if (pressure <= dia) {
+          clearInterval(interval);
         }
 
         pressure--;
-        if (pressure < 0) {
-          clearInterval(interval);
-          heartbeat.pause();
-        }
       }, 40);
     }
   </script>
