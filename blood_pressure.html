@@ -43,58 +43,83 @@
 
   <svg id="bpDial" width="300" height="300" viewBox="0 0 300 300">
     <circle cx="150" cy="150" r="140" fill="#fdfdfd" stroke="#333" stroke-width="4"/>
-    <g id="ticks">
-      <!-- Major Ticks -->
-      ${[...Array(11)].map((_, i) => {
-        const angle = -135 + i * 27;
-        return `<line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(${angle},150,150)" />`
-      }).join('')}
+    
+    <!-- Major Ticks every 30 degrees (every 30 mmHg) -->
+    <g id="majorTicks">
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-135,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-105,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-75,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-45,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-15,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(15,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(45,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(75,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(105,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(135,150,150)" />
     </g>
+
+    <!-- Minor Ticks -->
     <g id="minorTicks">
-      ${[...Array(10)].map((_, i) => {
-        const angle = -135 + (i * 27 + 13.5);
-        return `<line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(${angle},150,150)" />`
-      }).join('')}
+      <!-- Midpoints between major ticks -->
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-120,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-90,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-60,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-30,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(0,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(30,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(60,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(90,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(120,150,150)" />
     </g>
+
+    <!-- Labels -->
     <text x="150" y="285" text-anchor="middle" font-size="14">0</text>
-    <text x="65" y="255" text-anchor="middle" font-size="14">40</text>
-    <text x="30" y="180" text-anchor="middle" font-size="14">80</text>
-    <text x="45" y="100" text-anchor="middle" font-size="14">120</text>
-    <text x="100" y="45" text-anchor="middle" font-size="14">160</text>
-    <text x="190" y="45" text-anchor="middle" font-size="14">200</text>
-    <text x="255" y="100" text-anchor="middle" font-size="14">240</text>
-    <text x="270" y="180" text-anchor="middle" font-size="14">280</text>
-    <text x="235" y="255" text-anchor="middle" font-size="14">300</text>
+    <text x="55" y="250" text-anchor="middle" font-size="14">60</text>
+    <text x="25" y="170" text-anchor="middle" font-size="14">120</text>
+    <text x="60" y="80" text-anchor="middle" font-size="14">180</text>
+    <text x="150" y="35" text-anchor="middle" font-size="14">240</text>
+    <text x="240" y="80" text-anchor="middle" font-size="14">300</text>
+
+    <!-- Needle -->
     <line id="needle" x1="150" y1="150" x2="150" y2="30" stroke="red" stroke-width="4" transform="rotate(-135,150,150)" />
     <circle cx="150" cy="150" r="6" fill="#333" />
   </svg>
 
   <script>
+    let beatIntervalID = null;
+
     function bpToAngle(bp) {
       return ((bp / 300) * 270) - 135;
     }
 
     function updateNeedle(bp) {
       const angle = bpToAngle(bp);
-      document.getElementById('needle').setAttribute('transform', \`rotate(\${angle},150,150)\`);
+      document.getElementById('needle').setAttribute('transform', `rotate(${angle},150,150)`);
     }
 
-    function playBeatPattern(durationMs = 6000, bpm = 75) {
+    function playBeat() {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const beatInterval = 60 / bpm;
-      const startTime = ctx.currentTime;
-      const totalBeats = Math.floor(durationMs / (beatInterval * 1000));
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = 660;
+      gain.gain.setValueAtTime(1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    }
 
-      for (let i = 0; i < totalBeats; i++) {
-        const start = startTime + i * beatInterval;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = 660;
-        gain.gain.setValueAtTime(1, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.1);
+    function startHeartbeatLoop() {
+      if (beatIntervalID) clearInterval(beatIntervalID);
+      beatIntervalID = setInterval(() => {
+        playBeat();
+      }, 800); // ~75 BPM
+    }
+
+    function stopHeartbeatLoop() {
+      if (beatIntervalID) {
+        clearInterval(beatIntervalID);
+        beatIntervalID = null;
       }
     }
 
@@ -103,18 +128,25 @@
       const dia = parseInt(document.getElementById('dia').value);
       let pressure = 300;
 
+      stopHeartbeatLoop();
+      updateNeedle(pressure);
+
       const interval = setInterval(() => {
         updateNeedle(pressure);
 
         if (pressure === sys) {
-          playBeatPattern(10000, 75); // 10 seconds of beats at 75 BPM
+          startHeartbeatLoop();
         }
 
-        if (pressure <= dia) {
-          clearInterval(interval);
+        if (pressure === dia) {
+          stopHeartbeatLoop();
         }
 
         pressure--;
+        if (pressure < 0) {
+          clearInterval(interval);
+          stopHeartbeatLoop();
+        }
       }, 40);
     }
   </script>
