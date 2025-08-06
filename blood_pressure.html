@@ -47,7 +47,6 @@
 
     <!-- Major Ticks -->
     <g id="ticks">
-      <!-- Major tick marks (20 mmHg steps) -->
       <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-135,150,150)"/>
       <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-108,150,150)"/>
       <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-81,150,150)"/>
@@ -88,13 +87,11 @@
 
     <!-- Needle -->
     <line id="needle" x1="150" y1="150" x2="150" y2="30" stroke="red" stroke-width="4" transform="rotate(-135,150,150)" />
-
-    <!-- Center -->
     <circle cx="150" cy="150" r="6" fill="#333" />
   </svg>
 
-  <!-- Heartbeat Audio -->
-  <audio id="heartbeat" src="https://upload.wikimedia.org/wikipedia/commons/4/45/Heartbeat.ogg" preload="auto"></audio>
+  <!-- Updated Heartbeat Sound -->
+  <audio id="heartbeat" src="https://dailyemsquiz.com/sounds/heartbeat.mp3" preload="auto"></audio>
 
   <script>
     function bpToAngle(bp) {
@@ -103,16 +100,15 @@
 
     function updateNeedle(bp) {
       const angle = bpToAngle(bp);
-      const needle = document.getElementById('needle');
-      needle.setAttribute('transform', `rotate(${angle},150,150)`);
+      document.getElementById('needle').setAttribute('transform', `rotate(${angle},150,150)`);
     }
 
     function startSimulation() {
       const sys = parseInt(document.getElementById('sys').value);
       const dia = parseInt(document.getElementById('dia').value);
       let pressure = 300;
-
       const heartbeat = document.getElementById('heartbeat');
+
       heartbeat.pause();
       heartbeat.currentTime = 0;
 
