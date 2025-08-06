@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Blood Pressure Simulator</title>
+  <title>BP Simulator (0 to 280)</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -42,43 +42,36 @@
   <button onclick="startSimulation()">Start Simulation</button>
 
   <svg id="bpDial" width="300" height="300" viewBox="0 0 300 300">
+    <!-- Outer Dial -->
     <circle cx="150" cy="150" r="140" fill="#fdfdfd" stroke="#333" stroke-width="4"/>
-    
-    <!-- Major Ticks every 30 degrees (every 30 mmHg) -->
+
+    <!-- Major Ticks every 40 mmHg -->
     <g id="majorTicks">
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-135,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-105,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-75,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-45,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(-15,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(15,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(45,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(75,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(105,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="35" stroke="black" stroke-width="2" transform="rotate(135,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-135,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-90,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-45,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(0,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(45,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(90,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(135,150,150)" />
     </g>
 
-    <!-- Minor Ticks -->
+    <!-- Minor Ticks every 20 mmHg -->
     <g id="minorTicks">
-      <!-- Midpoints between major ticks -->
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-120,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-90,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-60,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(-30,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(0,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(30,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(60,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(90,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="28" stroke="black" stroke-width="1" transform="rotate(120,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-112.5,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-67.5,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-22.5,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(22.5,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(67.5,150,150)" />
+      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(112.5,150,150)" />
     </g>
 
-    <!-- Labels -->
-    <text x="150" y="285" text-anchor="middle" font-size="14">0</text>
-    <text x="55" y="250" text-anchor="middle" font-size="14">60</text>
-    <text x="25" y="170" text-anchor="middle" font-size="14">120</text>
-    <text x="60" y="80" text-anchor="middle" font-size="14">180</text>
-    <text x="150" y="35" text-anchor="middle" font-size="14">240</text>
-    <text x="240" y="80" text-anchor="middle" font-size="14">300</text>
+    <!-- Labels (0 at top left, 280 at bottom right) -->
+    <text x="40" y="240" font-size="14">0</text>
+    <text x="40" y="80" font-size="14">80</text>
+    <text x="150" y="40" text-anchor="middle" font-size="14">160</text>
+    <text x="255" y="80" font-size="14">240</text>
+    <text x="250" y="250" font-size="14">280</text>
 
     <!-- Needle -->
     <line id="needle" x1="150" y1="150" x2="150" y2="30" stroke="red" stroke-width="4" transform="rotate(-135,150,150)" />
@@ -89,7 +82,8 @@
     let beatIntervalID = null;
 
     function bpToAngle(bp) {
-      return ((bp / 300) * 270) - 135;
+      const maxBP = 280;
+      return ((bp / maxBP) * 270) - 135;
     }
 
     function updateNeedle(bp) {
@@ -126,7 +120,7 @@
     function startSimulation() {
       const sys = parseInt(document.getElementById('sys').value);
       const dia = parseInt(document.getElementById('dia').value);
-      let pressure = 300;
+      let pressure = 0;
 
       stopHeartbeatLoop();
       updateNeedle(pressure);
@@ -142,12 +136,12 @@
           stopHeartbeatLoop();
         }
 
-        pressure--;
-        if (pressure < 0) {
+        pressure++;
+        if (pressure > 280) {
           clearInterval(interval);
           stopHeartbeatLoop();
         }
-      }, 40);
+      }, 40); // 40ms per step
     }
   </script>
 
