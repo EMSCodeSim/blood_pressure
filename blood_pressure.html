@@ -2,27 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BP Simulator (0 to 280)</title>
+  <title>Manual BP Cuff Simulation</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f8ff;
       text-align: center;
+      background: #eef6fb;
       padding: 20px;
     }
-    label {
-      font-size: 18px;
-      margin: 10px;
+
+    h1 {
+      margin-bottom: 10px;
     }
+
+    svg {
+      margin-top: 20px;
+    }
+
+    label {
+      margin: 10px;
+      font-size: 18px;
+    }
+
     input {
       width: 60px;
-      font-size: 18px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
       font-size: 16px;
     }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+    }
+
+    #pressureDisplay {
+      font-size: 20px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
     #needle {
       transition: transform 0.05s linear;
     }
@@ -30,7 +48,7 @@
 </head>
 <body>
 
-  <h1>Blood Pressure Cuff Simulator</h1>
+  <h1>Manual Blood Pressure Cuff Simulation</h1>
 
   <label>Systolic:
     <input type="number" id="sys" value="120" min="50" max="250">
@@ -39,14 +57,19 @@
     <input type="number" id="dia" value="80" min="30" max="200">
   </label>
   <br>
-  <button onclick="startSimulation()">Start Simulation</button>
+  <label>Pump To:
+    <input type="number" id="targetPressure" value="200" min="120" max="280">
+  </label>
+  <div id="pressureDisplay">Current Pressure: 0 mmHg</div>
 
+  <button onclick="pumpCuff()">Pump Cuff</button>
+  <button onmousedown="startRelease()" onmouseup="stopRelease()" ontouchstart="startRelease()" ontouchend="stopRelease()">Release Pressure</button>
+
+  <!-- SVG Gauge -->
   <svg id="bpDial" width="300" height="300" viewBox="0 0 300 300">
-    <!-- Outer Dial -->
     <circle cx="150" cy="150" r="140" fill="#fdfdfd" stroke="#333" stroke-width="4"/>
-
-    <!-- Major Ticks every 40 mmHg -->
-    <g id="majorTicks">
+    <g id="ticks">
+      <!-- Major Ticks -->
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-135,150,150)" />
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-90,150,150)" />
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-45,150,150)" />
@@ -56,17 +79,7 @@
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(135,150,150)" />
     </g>
 
-    <!-- Minor Ticks every 20 mmHg -->
-    <g id="minorTicks">
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-112.5,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-67.5,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(-22.5,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(22.5,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(67.5,150,150)" />
-      <line x1="150" y1="20" x2="150" y2="30" stroke="black" stroke-width="1" transform="rotate(112.5,150,150)" />
-    </g>
-
-    <!-- Labels (0 at top left, 280 at bottom right) -->
+    <!-- Labels -->
     <text x="40" y="240" font-size="14">0</text>
     <text x="40" y="80" font-size="14">80</text>
     <text x="150" y="40" text-anchor="middle" font-size="14">160</text>
@@ -79,16 +92,33 @@
   </svg>
 
   <script>
-    let beatIntervalID = null;
+    let currentPressure = 0;
+    let maxPressure = 200;
+    let releasing = false;
+    let releaseInterval;
+    let heartbeatInterval;
+    let isBeating = false;
 
     function bpToAngle(bp) {
-      const maxBP = 280;
-      return ((bp / maxBP) * 270) - 135;
+      return ((bp / 280) * 270) - 135;
     }
 
     function updateNeedle(bp) {
       const angle = bpToAngle(bp);
-      document.getElementById('needle').setAttribute('transform', `rotate(${angle},150,150)`);
+      document.getElementById("needle").setAttribute("transform", `rotate(${angle},150,150)`);
+      document.getElementById("pressureDisplay").innerText = `Current Pressure: ${bp} mmHg`;
+    }
+
+    function pumpCuff() {
+      maxPressure = parseInt(document.getElementById("targetPressure").value);
+      const pumpInterval = setInterval(() => {
+        if (currentPressure >= maxPressure) {
+          clearInterval(pumpInterval);
+        } else {
+          currentPressure++;
+          updateNeedle(currentPressure);
+        }
+      }, 10);
     }
 
     function playBeat() {
@@ -103,47 +133,44 @@
       osc.stop(ctx.currentTime + 0.1);
     }
 
-    function startHeartbeatLoop() {
-      if (beatIntervalID) clearInterval(beatIntervalID);
-      beatIntervalID = setInterval(() => {
-        playBeat();
-      }, 800); // ~75 BPM
-    }
-
-    function stopHeartbeatLoop() {
-      if (beatIntervalID) {
-        clearInterval(beatIntervalID);
-        beatIntervalID = null;
+    function startHeartbeat() {
+      if (!isBeating) {
+        heartbeatInterval = setInterval(playBeat, 800);
+        isBeating = true;
       }
     }
 
-    function startSimulation() {
-      const sys = parseInt(document.getElementById('sys').value);
-      const dia = parseInt(document.getElementById('dia').value);
-      let pressure = 0;
+    function stopHeartbeat() {
+      clearInterval(heartbeatInterval);
+      isBeating = false;
+    }
 
-      stopHeartbeatLoop();
-      updateNeedle(pressure);
+    function startRelease() {
+      const sys = parseInt(document.getElementById("sys").value);
+      const dia = parseInt(document.getElementById("dia").value);
 
-      const interval = setInterval(() => {
-        updateNeedle(pressure);
-
-        if (pressure === sys) {
-          startHeartbeatLoop();
+      releasing = true;
+      releaseInterval = setInterval(() => {
+        if (!releasing || currentPressure <= 0) {
+          stopHeartbeat();
+          clearInterval(releaseInterval);
+          return;
         }
 
-        if (pressure === dia) {
-          stopHeartbeatLoop();
-        }
+        currentPressure--;
+        updateNeedle(currentPressure);
 
-        pressure++;
-        if (pressure > 280) {
-          clearInterval(interval);
-          stopHeartbeatLoop();
-        }
-      }, 40); // 40ms per step
+        if (currentPressure === sys) startHeartbeat();
+        if (currentPressure === dia) stopHeartbeat();
+
+      }, 40);
+    }
+
+    function stopRelease() {
+      releasing = false;
+      stopHeartbeat();
+      clearInterval(releaseInterval);
     }
   </script>
-
 </body>
 </html>
