@@ -68,8 +68,9 @@
   <!-- SVG Gauge -->
   <svg id="bpDial" width="300" height="300" viewBox="0 0 300 300">
     <circle cx="150" cy="150" r="140" fill="#fdfdfd" stroke="#333" stroke-width="4"/>
+    
+    <!-- Major Ticks -->
     <g id="ticks">
-      <!-- Major Ticks -->
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-135,150,150)" />
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-90,150,150)" />
       <line x1="150" y1="20" x2="150" y2="40" stroke="black" stroke-width="2" transform="rotate(-45,150,150)" />
@@ -99,6 +100,18 @@
     let heartbeatInterval;
     let isBeating = false;
 
+    // ✅ Persistent unlocked AudioContext
+    let audioCtx;
+    function unlockAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        osc.connect(audioCtx.destination);
+        osc.start();
+        osc.stop();
+      }
+    }
+
     function bpToAngle(bp) {
       return ((bp / 280) * 270) - 135;
     }
@@ -110,6 +123,7 @@
     }
 
     function pumpCuff() {
+      unlockAudio(); // Unlock on first interaction
       maxPressure = parseInt(document.getElementById("targetPressure").value);
       const pumpInterval = setInterval(() => {
         if (currentPressure >= maxPressure) {
@@ -122,15 +136,15 @@
     }
 
     function playBeat() {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
       osc.frequency.value = 660;
-      gain.gain.setValueAtTime(1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.1);
     }
 
     function startHeartbeat() {
@@ -146,6 +160,8 @@
     }
 
     function startRelease() {
+      unlockAudio(); // In case user starts with release
+
       const sys = parseInt(document.getElementById("sys").value);
       const dia = parseInt(document.getElementById("dia").value);
 
